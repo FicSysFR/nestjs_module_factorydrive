@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict'
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import test from 'node:test'
-import { CORE_PUBLIC_SKILL_FILES, parsePackOutput, validateManifestPair, validatePackMetadata } from '../package.mjs'
+import { CORE_PUBLIC_SKILL_FILES, findInstalledMismatches, parsePackOutput, validateManifestPair, validatePackMetadata } from '../package.mjs'
 
 const publication = {
   repository: 'https://github.com/FicSysFR/nestjs_module_factorydrive.git',
@@ -113,6 +116,29 @@ test('validatePackMetadata rejects source files', () => {
       }),
     /forbidden path/,
   )
+})
+
+test('findInstalledMismatches detects stale or missing installed files', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'factorydrive-mismatch-'))
+  try {
+    const writeTree = async (base, files) => {
+      for (const [path, content] of Object.entries(files)) {
+        await mkdir(join(base, 'dist'), { recursive: true })
+        await writeFile(join(base, path), content)
+      }
+    }
+    await writeTree(join(root, 'source'), { 'package.json': '{}', 'dist/index.d.ts': 'export declare const drivers: true' })
+    await writeTree(join(root, 'fresh'), { 'package.json': '{}', 'dist/index.d.ts': 'export declare const drivers: true' })
+    await writeTree(join(root, 'stale'), { 'package.json': '{}', 'dist/index.d.ts': 'export {}' })
+    await writeTree(join(root, 'partial'), { 'package.json': '{}' })
+
+    const pack = { files: [{ path: 'package.json' }, { path: 'dist/index.d.ts' }] }
+    assert.deepEqual(await findInstalledMismatches(pack, join(root, 'source'), join(root, 'fresh')), [])
+    assert.deepEqual(await findInstalledMismatches(pack, join(root, 'source'), join(root, 'stale')), ['dist/index.d.ts'])
+    assert.deepEqual(await findInstalledMismatches(pack, join(root, 'source'), join(root, 'partial')), ['dist/index.d.ts'])
+  } finally {
+    await rm(root, { recursive: true, force: true })
+  }
 })
 
 test('validatePackMetadata rejects files outside the strict allowlist', () => {
