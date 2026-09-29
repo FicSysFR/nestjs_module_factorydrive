@@ -269,6 +269,16 @@ describe('StorageManager', () => {
       ).toThrow(InvalidConfigException.duplicateDriverName('local').message)
     })
 
+    it('verrouille local quand drivers le redeclare avec la classe integree', () => {
+      const manager = new StorageManager({
+        disks: {},
+        drivers: { local: LocalFileSystemStorage },
+      })
+
+      expect(manager.getDrivers().get('local')).toBe(LocalFileSystemStorage)
+      expect(() => manager.registerDriver('local', OtherFakeStorage)).toThrow(InvalidConfigException.duplicateDriverName('local').message)
+    })
+
     it('permet de remplacer local via drivers quand registerLocalDriver est desactive', () => {
       const manager = new StorageManager({
         disks: {},

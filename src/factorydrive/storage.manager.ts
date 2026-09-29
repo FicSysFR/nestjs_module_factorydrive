@@ -134,6 +134,11 @@ export default class StorageManager {
 
     if (existing) {
       if (existing === driver) {
+        // Une re-déclaration explicite dans `drivers` verrouille le nom, même quand la classe
+        // est déjà enregistrée (cas de `drivers.local = LocalFileSystemStorage`).
+        if (declared) {
+          this._declaredDrivers.add(name)
+        }
         this.logger.debug(`Driver <${name}> already registered with the same class, skipping 🚗`)
         return
       }
