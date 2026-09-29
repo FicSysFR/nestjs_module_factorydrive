@@ -1,3 +1,6 @@
+// Copyright 2026 FicSys
+// SPDX-License-Identifier: Apache-2.0
+
 import { pipeline as nodePipeline } from 'stream'
 import { promisify } from 'util'
 

@@ -1,3 +1,6 @@
+// Copyright 2026 FicSys
+// SPDX-License-Identifier: Apache-2.0
+
 import { type DynamicModule, Global, Module, type Provider, type Type } from '@nestjs/common'
 import type { StorageManagerConfig } from './factorydrive'
 import { FACTORYDRIVE_MODULE_OPTIONS_TOKEN } from './factorydrive.constants'

@@ -5,6 +5,10 @@ hero:
   name: Factorydrive
   text: Portable file storage for NestJS
   tagline: One API for local filesystems, S3, SFTP, and custom storage drivers.
+  image:
+    light: /logo/logo.svg
+    dark: /logo/logo-dark.svg
+    alt: Factory Drive
   actions:
     - theme: brand
       text: Get started

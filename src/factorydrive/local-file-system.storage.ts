@@ -1,3 +1,6 @@
+// Copyright 2026 FicSys
+// SPDX-License-Identifier: Apache-2.0
+
 import { createHmac, timingSafeEqual } from 'crypto'
 import { promises as fs } from 'fs'
 import fse from 'fs-extra'

@@ -1,3 +1,6 @@
+// Copyright 2026 FicSys
+// SPDX-License-Identifier: Apache-2.0
+
 import type { LocalFileSystemStorageConfig } from './local-file-system.storage'
 
 export type { LocalFileSystemStorageConfig }

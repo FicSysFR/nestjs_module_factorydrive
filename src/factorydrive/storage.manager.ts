@@ -1,3 +1,6 @@
+// Copyright 2026 FicSys
+// SPDX-License-Identifier: Apache-2.0
+
 import { Logger } from '@nestjs/common'
 import { DriverNotSupportedException, InvalidConfigException } from '../exceptions'
 import type AbstractStorage from './abstract.storage'

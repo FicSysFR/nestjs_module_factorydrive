@@ -1,3 +1,6 @@
+// Copyright 2026 FicSys
+// SPDX-License-Identifier: Apache-2.0
+
 /** Default published docs origin, without a trailing slash. */
 export const DEFAULT_DOCS_BASE_URL = 'https://ficsysfr.github.io/nestjs_module_factorydrive'
 

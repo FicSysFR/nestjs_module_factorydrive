@@ -1,3 +1,6 @@
+// Copyright 2026 FicSys
+// SPDX-License-Identifier: Apache-2.0
+
 export * from './authorization-required.exception'
 export * from './driver-not-supported.exception'
 export * from './file-not-found.exception'

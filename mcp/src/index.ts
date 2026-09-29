@@ -1,4 +1,7 @@
 #!/usr/bin/env node
+// Copyright 2026 FicSys
+// SPDX-License-Identifier: Apache-2.0
+
 import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
