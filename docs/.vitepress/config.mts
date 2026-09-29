@@ -33,6 +33,7 @@ export default defineConfig({
   cleanUrls: true,
   lastUpdated: true,
   srcExclude: ['conventions/**', 'references-patterns/**'],
+  head: [['link', { rel: 'icon', type: 'image/svg+xml', href: `${base}favicon.svg` }]],
 
   vite: {
     plugins: [
@@ -87,6 +88,7 @@ export default defineConfig({
   },
 
   themeConfig: {
+    logo: { light: '/logo.svg', dark: '/logo-dark.svg', alt: 'Factory Drive' },
     siteTitle: 'Factorydrive',
     socialLinks: [{ icon: 'github', link: repository }],
     search: { provider: 'local' },
