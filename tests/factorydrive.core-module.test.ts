@@ -70,4 +70,23 @@ describe('FactorydriveCoreModule', () => {
     const factory = new TestOptionsFactory()
     await expect(asyncOptionsProvider?.useFactory(factory)).resolves.toEqual(factory.createFactorydriveModuleOptions())
   })
+
+  it('forRootAsync avec useExisting injecte la factory existante sans enregistrer de provider de classe', async () => {
+    const dynamicModule = FactorydriveCoreModule.forRootAsync({
+      useExisting: TestOptionsFactory,
+    })
+
+    const providers = dynamicModule.providers ?? []
+    const classProvider = providers.find((provider) => typeof provider === 'object' && provider !== null && 'provide' in provider && provider.provide === TestOptionsFactory)
+    const asyncOptionsProvider = providers.find(
+      (provider) => typeof provider === 'object' && provider !== null && 'provide' in provider && provider.provide === FACTORYDRIVE_MODULE_OPTIONS_TOKEN,
+    ) as { inject?: unknown[]; useFactory: (factory: FactorydriveModuleOptionsFactory) => Promise<StorageManagerConfig> } | undefined
+
+    expect(classProvider).toBeUndefined()
+    expect(providers).toHaveLength(2)
+    expect(asyncOptionsProvider?.inject).toEqual([TestOptionsFactory])
+
+    const factory = new TestOptionsFactory()
+    await expect(asyncOptionsProvider?.useFactory(factory)).resolves.toEqual(factory.createFactorydriveModuleOptions())
+  })
 })
