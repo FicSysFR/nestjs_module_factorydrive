@@ -11,7 +11,9 @@ storage, SFTP, or a custom backend.
 ## Requirements
 
 - Node.js 22 or newer
-- NestJS 6 through 11
+- NestJS 6 through 12
+- With NestJS 12, Node.js 22.12 or newer: Nest 12 ships ESM only and the Factorydrive
+  CommonJS build loads it through `require(esm)`
 - TypeScript 5
 
 ## Install the core

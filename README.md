@@ -42,7 +42,8 @@ Current maintained packages in the Factorydrive ecosystem:
 
 - Node.js `>= 22`
 - Yarn `1.22.22` (used for development in this repository)
-- NestJS `^6` to `^11` (`@nestjs/common` and `@nestjs/core`)
+- NestJS `^6` to `^12` (`@nestjs/common` and `@nestjs/core`)
+- With NestJS 12 (ESM-only), Node.js `>= 22.12` so the CommonJS build can `require()` Nest
 
 ## Architecture and Portability
 

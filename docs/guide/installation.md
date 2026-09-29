@@ -11,7 +11,9 @@ S3, SFTP ou un driver personnalisé.
 ## Prérequis
 
 - Node.js 22 ou plus récent
-- NestJS 6 à 11
+- NestJS 6 à 12
+- Avec NestJS 12, Node.js 22.12 ou plus récent : Nest 12 est publié en ESM uniquement et
+  le build CommonJS de Factorydrive le charge via `require(esm)`
 - TypeScript 5
 
 ## Installer le cœur
