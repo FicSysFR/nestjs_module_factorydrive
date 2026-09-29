@@ -1,6 +1,8 @@
-import { describe, expect, it } from 'vitest'
+import { Logger } from '@nestjs/common'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { DriverNotSupportedException, InvalidConfigException } from '../src/exceptions'
 import AbstractStorage from '../src/factorydrive/abstract.storage'
+import { LocalFileSystemStorage } from '../src/factorydrive/local-file-system.storage'
 import StorageManager from '../src/factorydrive/storage.manager'
 import type { StorageManagerConfig } from '../src/factorydrive/types'
 
@@ -15,6 +17,12 @@ class FakeStorage extends AbstractStorage {
 
   public async onStorageInit(): Promise<void> {
     this.initCalls += 1
+  }
+}
+
+class OtherFakeStorage extends AbstractStorage {
+  public constructor(public config?: unknown) {
+    super()
   }
 }
 
@@ -140,5 +148,157 @@ describe('StorageManager', () => {
     const two = manager.disk<FakeStorage>('two')
     expect(one.initCalls).toBe(1)
     expect(two.initCalls).toBe(1)
+  })
+
+  it('leve une erreur explicite quand un disque reference un driver inconnu, avant toute instanciation', async () => {
+    const manager = new StorageManager({
+      default: 'assets',
+      disks: {
+        assets: { driver: 's3', config: {} },
+      },
+      registerLocalDriver: false,
+    })
+
+    await expect(manager.initDisks()).rejects.toMatchObject({
+      driver: 's3',
+      disk: 'assets',
+      message: 'Factorydrive driver "s3" required by disk "assets" is not registered. Declare it in "drivers" or call registerDriver() before module initialization.',
+    })
+    expect(manager.getDisks().size).toBe(0)
+  })
+
+  it('leve une erreur explicite depuis disk() quand le driver est inconnu', () => {
+    const manager = new StorageManager({
+      default: 'assets',
+      disks: { assets: { driver: 's3', config: {} } },
+      registerLocalDriver: false,
+    })
+
+    try {
+      manager.disk()
+    } catch (error) {
+      expect(error).toBeInstanceOf(DriverNotSupportedException)
+      expect((error as DriverNotSupportedException).driver).toBe('s3')
+      expect((error as DriverNotSupportedException).disk).toBe('assets')
+      return
+    }
+
+    throw new Error('Expected DriverNotSupportedException')
+  })
+
+  describe('drivers declaratifs', () => {
+    it('enregistre les drivers declares dans la config et les rend disponibles pour les disques', () => {
+      const manager = new StorageManager({
+        default: 'memory',
+        drivers: { memory: FakeStorage },
+        disks: { memory: { driver: 'memory', config: { key: 'value' } } },
+        registerLocalDriver: false,
+      })
+
+      expect(manager.getDrivers().get('memory')).toBe(FakeStorage)
+      const disk = manager.disk<FakeStorage>()
+      expect(disk).toBeInstanceOf(FakeStorage)
+      expect(disk.config).toEqual({ key: 'value' })
+    })
+
+    it('permet a plusieurs disques de partager le meme driver declaratif avec des configs differentes', () => {
+      const manager = new StorageManager({
+        default: 'assets',
+        drivers: { memory: FakeStorage },
+        disks: {
+          assets: { driver: 'memory', config: { bucket: 'assets' } },
+          backups: { driver: 'memory', config: { bucket: 'backups' } },
+        },
+        registerLocalDriver: false,
+      })
+
+      const assets = manager.disk<FakeStorage>('assets')
+      const backups = manager.disk<FakeStorage>('backups')
+
+      expect(assets).not.toBe(backups)
+      expect(assets.config).toEqual({ bucket: 'assets' })
+      expect(backups.config).toEqual({ bucket: 'backups' })
+    })
+
+    it('leve une erreur quand une entree de drivers n est pas un constructeur', () => {
+      expect(
+        () =>
+          new StorageManager({
+            disks: {},
+            registerLocalDriver: false,
+            // biome-ignore lint/suspicious/noExplicitAny: valeur invalide testee intentionnellement
+            drivers: { broken: 'not-a-class' as any },
+          }),
+      ).toThrow(InvalidConfigException.invalidDriver('broken').message)
+    })
+  })
+
+  describe('politique de doublons', () => {
+    afterEach(() => {
+      vi.restoreAllMocks()
+    })
+
+    it('ne fait rien quand le meme driver est re-declare avec la meme classe (migration progressive)', () => {
+      const manager = new StorageManager({
+        disks: {},
+        registerLocalDriver: false,
+        drivers: { memory: FakeStorage },
+      })
+
+      expect(() => manager.registerDriver('memory', FakeStorage)).not.toThrow()
+      expect(manager.getDrivers().get('memory')).toBe(FakeStorage)
+    })
+
+    it('leve une erreur quand registerDriver entre en conflit avec un driver declare dans drivers', () => {
+      const manager = new StorageManager({
+        disks: {},
+        registerLocalDriver: false,
+        drivers: { memory: FakeStorage },
+      })
+
+      expect(() => manager.registerDriver('memory', OtherFakeStorage)).toThrow(InvalidConfigException.duplicateDriverName('memory').message)
+    })
+
+    it('leve une erreur quand drivers redeclare le driver local integre', () => {
+      expect(
+        () =>
+          new StorageManager({
+            disks: {},
+            drivers: { local: OtherFakeStorage },
+          }),
+      ).toThrow(InvalidConfigException.duplicateDriverName('local').message)
+    })
+
+    it('permet de remplacer local via drivers quand registerLocalDriver est desactive', () => {
+      const manager = new StorageManager({
+        disks: {},
+        registerLocalDriver: false,
+        drivers: { local: OtherFakeStorage },
+      })
+
+      expect(manager.getDrivers().get('local')).toBe(OtherFakeStorage)
+    })
+
+    it('remplace un driver legacy par un autre driver legacy avec un avertissement (comportement 2.0 conserve)', () => {
+      const warnSpy = vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined)
+
+      const manager = new StorageManager({ disks: {}, registerLocalDriver: false })
+      manager.registerDriver('memory', FakeStorage)
+      manager.registerDriver('memory', OtherFakeStorage)
+
+      expect(manager.getDrivers().get('memory')).toBe(OtherFakeStorage)
+      expect(warnSpy).toHaveBeenCalledTimes(1)
+    })
+
+    it('remplace le driver local integre via registerDriver avec un avertissement', () => {
+      const warnSpy = vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined)
+
+      const manager = new StorageManager({ disks: {} })
+      manager.registerDriver('local', OtherFakeStorage)
+
+      expect(manager.getDrivers().get('local')).toBe(OtherFakeStorage)
+      expect(manager.getDrivers().get('local')).not.toBe(LocalFileSystemStorage)
+      expect(warnSpy).toHaveBeenCalledTimes(1)
+    })
   })
 })

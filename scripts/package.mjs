@@ -169,7 +169,41 @@ async function auditInstalledTarballs(tarballs, projectRoot) {
     const requireScript = `const module = require('${CORE_NAME}'); if (typeof module.FactorydriveService !== 'function') throw new Error('CommonJS core export missing')`
     run(process.execPath, ['--eval', requireScript], temporaryRoot)
 
-    await writeFile(join(temporaryRoot, 'types-smoke.ts'), `import { FactorydriveService } from '${CORE_NAME}'\nimport '${MCP_NAME}'\nvoid FactorydriveService\n`)
+    const typesSmokeSource = [
+      `import { AbstractStorage, FactorydriveModule, FactorydriveService } from '${CORE_NAME}'`,
+      `import type { StorageDriverConstructor, StorageManagerConfig } from '${CORE_NAME}'`,
+      `import '${MCP_NAME}'`,
+      'void FactorydriveService',
+      '',
+      '// Preuve que StorageDriverConstructor<TConfig> accepte un vrai driver typé sous',
+      "// `strict: true` (`strictFunctionTypes`), c'est-à-dire que `drivers` reste utilisable",
+      '// avec un constructeur dont la config est précisément typée, pas `unknown`.',
+      'interface TypedConfig {',
+      '  bucket: string',
+      '}',
+      '',
+      'class TypedStorage extends AbstractStorage {',
+      '  public constructor(public readonly config: TypedConfig) {',
+      '    super()',
+      '  }',
+      '}',
+      '',
+      'const driverConstructor: StorageDriverConstructor<TypedConfig> = TypedStorage',
+      'void driverConstructor',
+      '',
+      'const syncOptions: StorageManagerConfig = {',
+      "  default: 'typed',",
+      '  drivers: { typed: TypedStorage },',
+      "  disks: { typed: { driver: 'typed', config: { bucket: 'audit' } satisfies TypedConfig } },",
+      '}',
+      'FactorydriveModule.forRoot(syncOptions)',
+      '',
+      'FactorydriveModule.forRootAsync({',
+      '  useFactory: (): StorageManagerConfig => syncOptions,',
+      '})',
+      '',
+    ].join('\n')
+    await writeFile(join(temporaryRoot, 'types-smoke.ts'), typesSmokeSource)
     await writeFile(
       join(temporaryRoot, 'tsconfig.json'),
       `${JSON.stringify({ compilerOptions: { module: 'NodeNext', moduleResolution: 'NodeNext', target: 'ES2022', strict: true, noEmit: true }, files: ['types-smoke.ts'] }, null, 2)}\n`,

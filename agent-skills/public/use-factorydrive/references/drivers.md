@@ -34,14 +34,18 @@ server. See [signed-urls.md](signed-urls.md).
 
 - Package: `@ficsysfr/nestjs_module_factorydrive-s3`
 - Class: `AwsS3Storage`
-- Registration key: application-defined, conventionally `s3`
+- Registration key: application-defined, conventionally `s3`; declare it in `drivers`
+  (preferred) or through `registerDriver('s3', AwsS3Storage)`
 - Required configuration: `bucket`
 - Additional configuration: AWS SDK v3 `S3ClientConfig`, including `region`,
   `credentials`, `endpoint`, and provider-specific compatibility options
 
-The driver supports Amazon S3 and S3-compatible providers. Do not hardcode a particular
-provider's endpoint or credentials in business services. Its `getSignedUrl()` produces a
-provider-signed GET URL; Factorydrive does not verify that URL in the application.
+The driver supports Amazon S3 and S3-compatible providers (MinIO, RustFS, DigitalOcean
+Spaces, Backblaze B2, Cloudflare R2, etc.) through the same standard `S3ClientConfig`
+fields — set `endpoint` and, for path-style providers, `forcePathStyle: true`. Do not
+hardcode a particular provider's endpoint or credentials in business services. Its
+`getSignedUrl()` produces a provider-signed GET URL; Factorydrive does not verify that
+URL in the application.
 
 Current source: <https://github.com/FicSysFR/nestjs_module_factorydrive-s3>
 
@@ -49,14 +53,16 @@ Current source: <https://github.com/FicSysFR/nestjs_module_factorydrive-s3>
 
 - Package: `@ficsysfr/nestjs_module_factorydrive-sftp`
 - Class: `SFTPStorage`
-- Registration key: application-defined, conventionally `sftp`
+- Registration key: application-defined, conventionally `sftp`; declare it in `drivers`
+  (preferred) or through `registerDriver('sftp', SFTPStorage)`
 - Required configuration: remote `root` and `options`
 - `options`: `ssh2-sftp-client` connection options such as `host`, `port`,
   `username`, `password`, or private-key authentication
 
-The driver connects during `onStorageInit()`. Register its class before module
-initialization. Resolve the configured disk through `FactorydriveService.getDisk()`;
-do not use obsolete examples based on `createDisk()` or `disk()`.
+The driver connects during `onStorageInit()`, so its class must be registered — declared
+in `drivers` or passed to `registerDriver()` — before module initialization completes.
+Resolve the configured disk through `FactorydriveService.getDisk()`; do not use obsolete
+examples based on `createDisk()` or `disk()`.
 
 Current source: <https://github.com/FicSysFR/nestjs_module_factorydrive-sftp/blob/main/src/sftp.storage.ts>
 

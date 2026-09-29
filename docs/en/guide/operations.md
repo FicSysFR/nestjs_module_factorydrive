@@ -87,3 +87,10 @@ Factorydrive exports `InvalidConfigException`, `DriverNotSupportedException`,
 `MethodNotSupportedException`, `NoSuchBucketException`, and `UnknownException`.
 Map them at an HTTP, job, or application boundary without leaking credentials or raw
 provider failures.
+
+`DriverNotSupportedException` is raised when a disk's `driver` was never registered; its
+message names both the driver and the disk (see
+[Startup validation](configuration.md#startup-validation)). `InvalidConfigException` is
+also raised for driver configuration mistakes: an invalid entry in `drivers`, or a
+driver name registered twice with two different classes (see
+[Duplicate registration policy](configuration.md#register-drivers-dynamically-registerdriver)).

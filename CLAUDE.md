@@ -117,7 +117,14 @@ Respecter strictement les conventions TypeScript et NestJS.
 
 **Stockage**
 - `StorageManager` enregistre les drivers et résout les disques nommés.
-- Tout nouveau driver étend `AbstractStorage` et s'enregistre via le manager.
+- Tout nouveau driver étend `AbstractStorage`, avec la config du disque comme unique
+  paramètre de constructeur (compatible `StorageDriverConstructor<TConfig>`).
+- Enregistrement des drivers : `drivers` (déclaratif, dans `forRoot()` /
+  `forRootAsync()`, à privilégier) ou `FactorydriveService.registerDriver()` (dynamique,
+  toujours supporté). Politique de doublons : même classe → no-op ; classes différentes
+  avec un enregistrement déclaratif impliqué → `InvalidConfigException` ; deux
+  `registerDriver()` en conflit → comportement 2.0 conservé (dernier gagne) avec un
+  avertissement.
 - Le driver `local` vit dans le package principal ; S3 et autres drivers dans des
   packages satellites (`@ficsysfr/nestjs_module_factorydrive-*`).
 - Voir le skill `agent-skills/public/factorydrive-driver/SKILL.md`.

@@ -137,5 +137,30 @@ describe('Factorydrive Agent Skills pack', () => {
     expect(driverSkill).toContain("factorydrive.registerDriver('provider-key', ProviderStorage)")
     expect(driverSkill).toContain('does not declare abstract methods')
     expect(driverSkill).toContain('do not export a registration function')
+    expect(driverSkill).toContain('drivers: {')
+  })
+
+  it('illustrates the declarative drivers contract (forRoot({ drivers }))', () => {
+    class ConfigurableStorage extends AbstractStorage {
+      public constructor(public readonly config: unknown) {
+        super()
+      }
+    }
+
+    const config = { endpoint: 'memory://test' }
+    const factorydrive = new FactorydriveService({
+      default: 'custom',
+      drivers: { custom: ConfigurableStorage },
+      disks: { custom: { driver: 'custom', config } },
+    })
+
+    const disk = factorydrive.getDisk<ConfigurableStorage>()
+
+    expect(disk).toBeInstanceOf(ConfigurableStorage)
+    expect(disk.config).toBe(config)
+
+    const configurationReference = readFileSync(resolve(publicRoot, 'use-factorydrive/references/configuration.md'), 'utf8')
+    expect(configurationReference).toContain('drivers: {')
+    expect(configurationReference).toContain('registerDriver')
   })
 })

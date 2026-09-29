@@ -40,6 +40,32 @@ filesystem. It does not expose an HTTP server.
 S3 supports Amazon S3 and compatible providers. Its signed URL is validated by the
 provider, not by `verifySignedUrl()`.
 
+Any S3-compatible endpoint (MinIO, RustFS, DigitalOcean Spaces, Backblaze B2, Cloudflare
+R2, ...) is configured through the same standard `S3ClientConfig` fields — set
+`endpoint` and `forcePathStyle: true` for path-style providers:
+
+```ts
+FactorydriveModule.forRoot({
+  default: 'assets',
+  drivers: { s3: AwsS3Storage },
+  disks: {
+    assets: {
+      driver: 's3',
+      config: {
+        bucket: 'my-assets',
+        endpoint: 'http://rustfs:9000',
+        region: 'us-east-1',
+        forcePathStyle: true,
+        credentials: {
+          accessKeyId: process.env.S3_ACCESS_KEY!,
+          secretAccessKey: process.env.S3_SECRET_KEY!,
+        },
+      },
+    },
+  },
+})
+```
+
 Source: <https://github.com/FicSysFR/nestjs_module_factorydrive-s3>
 
 ## SFTP
@@ -48,8 +74,9 @@ Source: <https://github.com/FicSysFR/nestjs_module_factorydrive-s3>
 - Class: `SFTPStorage`
 - Required configuration: remote `root` and `ssh2-sftp-client` connection `options`
 
-SFTP connects during `onStorageInit()`. Register it before module initialization.
-Prefer key-based authentication where the deployment environment supports it.
+SFTP connects during `onStorageInit()`, so its class must be registered — declared in
+`drivers` (preferred) or passed to `registerDriver()` — before module initialization
+completes. Prefer key-based authentication where the deployment environment supports it.
 
 Source: <https://github.com/FicSysFR/nestjs_module_factorydrive-sftp>
 
