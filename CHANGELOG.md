@@ -8,6 +8,7 @@ All notable changes to Factorydrive are documented here.
 
 - `AbstractStorage.onStorageInit()` n’écrit plus `onStorageInita` dans la console pour chaque disque dont le driver ne surcharge pas ce hook.
 - Les dépendances pair `@nestjs/common` et `@nestjs/core` acceptent `^12.0.0` en plus des versions 6 à 11. Avec NestJS 12 (requis par Vendure 3.8), npm échouait en `ERESOLVE` ou installait une seconde copie de NestJS 11 pour Factorydrive.
+- `FactorydriveModule.forRootAsync({ imports, useExisting })` réutilise désormais la factory d’options exportée par le module importé. L’option était déclarée dans `FactorydriveModuleAsyncOptions` mais ignorée : Nest recevait un provider `undefined` et le démarrage échouait.
 
 ### Compatibilité
 

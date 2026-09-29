@@ -151,6 +151,41 @@ describe('Factorydrive (integration Nest)', () => {
     expect(disk.config).toEqual({ bucket: 'from-use-class' })
   })
 
+  it('forRootAsync() avec useExisting reutilise la factory exportee par un module importe', async () => {
+    class OptionsFactory implements FactorydriveModuleOptionsFactory {
+      public calls = 0
+
+      public createFactorydriveModuleOptions(): StorageManagerConfig {
+        this.calls += 1
+        return {
+          default: 'assets',
+          drivers: { memory: MemoryStorage },
+          disks: { assets: { driver: 'memory', config: { bucket: 'from-use-existing' } } },
+        }
+      }
+    }
+
+    @Module({
+      providers: [OptionsFactory],
+      exports: [OptionsFactory],
+    })
+    class OptionsModule {}
+
+    @Module({
+      imports: [FactorydriveModule.forRootAsync({ imports: [OptionsModule], useExisting: OptionsFactory })],
+    })
+    class AppModule {}
+
+    const context = await NestFactory.createApplicationContext(AppModule, { logger: false, abortOnError: false })
+    app = context
+
+    const disk = context.get(FactorydriveService).getDisk<MemoryStorage>()
+    expect(disk).toBeInstanceOf(MemoryStorage)
+    expect(disk.config).toEqual({ bucket: 'from-use-existing' })
+    // L'instance exportee par OptionsModule est reutilisee : aucune seconde instance n'est creee.
+    expect(context.get(OptionsFactory).calls).toBe(1)
+  })
+
   it('conserve la compatibilite legacy : registerDriver() enregistre avant onModuleInit', async () => {
     @Module({
       imports: [

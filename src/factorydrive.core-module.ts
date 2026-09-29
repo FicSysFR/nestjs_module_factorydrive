@@ -35,7 +35,8 @@ export class FactorydriveCoreModule {
   }
 
   private static createAsyncProviders(options: FactorydriveModuleAsyncOptions): Provider[] {
-    if (options.useFactory) return [this.createAsyncOptionsProvider(options)]
+    // `useExisting` réutilise un provider exporté par `options.imports` : l'enregistrer ici créerait une seconde instance.
+    if (options.useFactory || options.useExisting) return [this.createAsyncOptionsProvider(options)]
     const useClass = options.useClass as Type<FactorydriveModuleOptionsFactory>
     return [
       this.createAsyncOptionsProvider(options),
@@ -54,7 +55,7 @@ export class FactorydriveCoreModule {
         inject: options.inject || [],
       }
     }
-    const inject = [options.useClass as Type<FactorydriveModuleOptionsFactory>]
+    const inject = [(options.useExisting || options.useClass) as Type<FactorydriveModuleOptionsFactory>]
     return {
       provide: FACTORYDRIVE_MODULE_OPTIONS_TOKEN,
       useFactory: async (optionsFactory: FactorydriveModuleOptionsFactory) => optionsFactory.createFactorydriveModuleOptions(),
