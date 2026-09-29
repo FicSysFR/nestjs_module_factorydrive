@@ -1,3 +1,6 @@
+// Copyright 2026 FicSys
+// SPDX-License-Identifier: Apache-2.0
+
 import type { McpServer } from '@modelcontextprotocol/server'
 import * as z from 'zod/v4'
 import { fetchText, getDocsBaseUrl, loadLlmsFullTxt, loadLlmsTxt, searchDocsContent } from './docs-client.js'

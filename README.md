@@ -361,4 +361,7 @@ upgrade the core and every installed driver together. See the
 
 ## License
 
-MIT
+Apache-2.0, see [`LICENSE`](./LICENSE). Copyright 2026 FicSys.
+
+Versions up to and including 2.0.0 were published under the MIT License and remain
+available under those terms.

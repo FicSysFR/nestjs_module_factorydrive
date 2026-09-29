@@ -63,7 +63,7 @@ export default defineConfig({
         editLink: { pattern: `${repository}/edit/main/docs/:path`, text: 'Modifier cette page' },
         lastUpdated: { text: 'Mis à jour' },
         docFooter: { prev: 'Précédent', next: 'Suivant' },
-        footer: { message: 'Publié sous licence MIT.', copyright: 'Copyright © tacxou et contributeurs' },
+        footer: { message: 'Publié sous licence Apache 2.0.', copyright: 'Copyright © 2026 FicSys et contributeurs' },
       },
     },
     en: {
@@ -81,7 +81,7 @@ export default defineConfig({
         outline: { level: [2, 3], label: 'On this page' },
         editLink: { pattern: `${repository}/edit/main/docs/:path`, text: 'Edit this page' },
         lastUpdated: { text: 'Updated' },
-        footer: { message: 'Released under the MIT License.', copyright: 'Copyright © tacxou and contributors' },
+        footer: { message: 'Released under the Apache License 2.0.', copyright: 'Copyright © 2026 FicSys and contributors' },
       },
     },
   },
