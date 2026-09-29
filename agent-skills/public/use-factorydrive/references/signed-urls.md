@@ -62,7 +62,7 @@ Connect this service to the consuming application's controller or HTTP adapter. 
 wildcard syntax varies across supported NestJS platform versions, so preserve the
 project's existing routing convention rather than copying a version-specific wildcard.
 
-Do not claim that one wildcard decorator works unchanged across NestJS 6 through 11.
+Do not claim that one wildcard decorator works unchanged across NestJS 6 through 12.
 Inspect the installed NestJS version, HTTP adapter, global prefix, and existing route
 style before writing the controller decorator or extracting its wildcard parameter. If
 the consuming project is unavailable, provide only the verification/streaming service
