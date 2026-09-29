@@ -6,8 +6,8 @@ hero:
   text: Stockage de fichiers portable pour NestJS
   tagline: Une API commune pour le système de fichiers local, S3, SFTP et vos drivers personnalisés.
   image:
-    light: /logo.svg
-    dark: /logo-dark.svg
+    light: /logo/logo.svg
+    dark: /logo/logo-dark.svg
     alt: Factory Drive
   actions:
     - theme: brand

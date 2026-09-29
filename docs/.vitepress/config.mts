@@ -33,7 +33,7 @@ export default defineConfig({
   cleanUrls: true,
   lastUpdated: true,
   srcExclude: ['conventions/**', 'references-patterns/**'],
-  head: [['link', { rel: 'icon', type: 'image/svg+xml', href: `${base}favicon.svg` }]],
+  head: [['link', { rel: 'icon', type: 'image/svg+xml', href: `${base}logo/favicon.svg` }]],
 
   vite: {
     plugins: [
@@ -88,7 +88,7 @@ export default defineConfig({
   },
 
   themeConfig: {
-    logo: { light: '/logo.svg', dark: '/logo-dark.svg', alt: 'Factory Drive' },
+    logo: { light: '/logo/logo.svg', dark: '/logo/logo-dark.svg', alt: 'Factory Drive' },
     siteTitle: 'Factorydrive',
     socialLinks: [{ icon: 'github', link: repository }],
     search: { provider: 'local' },

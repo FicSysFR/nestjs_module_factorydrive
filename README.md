@@ -1,8 +1,8 @@
 <p align="center">
   <a href="https://ficsysfr.github.io/nestjs_module_factorydrive/" target="blank">
     <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/FicSysFR/nestjs_module_factorydrive/main/docs/public/logo-full-dark.svg" />
-      <img src="https://raw.githubusercontent.com/FicSysFR/nestjs_module_factorydrive/main/docs/public/logo-full.svg" width="320" alt="Factory Drive logo" />
+      <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/FicSysFR/nestjs_module_factorydrive/main/docs/public/logo/logo-full-dark.svg" />
+      <img src="https://raw.githubusercontent.com/FicSysFR/nestjs_module_factorydrive/main/docs/public/logo/logo-full.svg" width="320" alt="Factory Drive logo" />
     </picture>
   </a>
 </p>

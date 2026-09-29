@@ -6,6 +6,9 @@
     "useIgnoreFile": true,
     "defaultBranch": "main"
   },
+  "files": {
+    "includes": ["**", "!docs/public/logo/source"]
+  },
   "formatter": {
     "enabled": true,
     "indentStyle": "space",
