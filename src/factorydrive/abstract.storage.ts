@@ -14,7 +14,6 @@ export default abstract class AbstractStorage {
   }
 
   public onStorageInit(): void | Promise<void> {
-    console.log('onStorageInita')
     return Promise.resolve()
   }
 
