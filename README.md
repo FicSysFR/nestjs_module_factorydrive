@@ -27,7 +27,7 @@
 - configure one or many disks
 - select a default disk
 - use built-in local filesystem driver
-- register custom drivers (S3, Spaces, etc.)
+- declare custom drivers (S3, Spaces, etc.) directly in `forRoot()` / `forRootAsync()`
 
 ## Maintained Packages
 
@@ -249,14 +249,20 @@ Both `signatureSecret` and `baseUrl` are required for signing; otherwise `getSig
 
 ## Register a Custom Driver
 
-Custom drivers must extend `AbstractStorage` and implement the methods you need.
+Custom drivers must extend `AbstractStorage` and implement the methods you need. A
+driver's constructor takes the disk's `config` as its single parameter, which is what
+lets it be typed with the exported `StorageDriverConstructor<TConfig>` helper.
 
 ```ts
 // aws-s3.storage.ts
 import { AbstractStorage, DeleteResponse, Response } from '@ficsysfr/nestjs_module_factorydrive'
 
+export interface AwsS3StorageConfig {
+  bucket: string
+}
+
 export class AwsS3Storage extends AbstractStorage {
-  public constructor(private readonly config: { bucket: string }) {
+  public constructor(private readonly config: AwsS3StorageConfig) {
     super()
   }
 
@@ -272,18 +278,22 @@ export class AwsS3Storage extends AbstractStorage {
 }
 ```
 
-Then register it at startup:
+Then declare it directly in `forRoot()`, alongside the disks that use it — no module
+constructor required just to register a driver:
 
 ```ts
 // app.module.ts
 import { Module } from '@nestjs/common'
-import { FactorydriveModule, FactorydriveService } from '@ficsysfr/nestjs_module_factorydrive'
+import { FactorydriveModule } from '@ficsysfr/nestjs_module_factorydrive'
 import { AwsS3Storage } from './aws-s3.storage'
 
 @Module({
   imports: [
     FactorydriveModule.forRoot({
       default: 's3',
+      drivers: {
+        s3: AwsS3Storage,
+      },
       disks: {
         s3: {
           driver: 's3',
@@ -295,12 +305,90 @@ import { AwsS3Storage } from './aws-s3.storage'
     }),
   ],
 })
+export class AppModule {}
+```
+
+`forRootAsync()` accepts `drivers` the same way, from `useFactory` or `useClass`:
+
+```ts
+// app.module.ts
+import { Module } from '@nestjs/common'
+import { ConfigModule, ConfigService } from '@nestjs/config'
+import { FactorydriveModule } from '@ficsysfr/nestjs_module_factorydrive'
+import { AwsS3Storage } from './aws-s3.storage'
+
+@Module({
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    FactorydriveModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        default: 'assets',
+        drivers: { s3: AwsS3Storage },
+        disks: {
+          assets: {
+            driver: 's3',
+            config: { bucket: config.getOrThrow<string>('S3_BUCKET') },
+          },
+        },
+      }),
+    }),
+  ],
+})
+export class AppModule {}
+```
+
+### S3-compatible providers (MinIO, RustFS, Spaces, B2, R2, ...)
+
+The `@ficsysfr/nestjs_module_factorydrive-s3` driver's configuration extends AWS SDK v3
+`S3ClientConfig`. Any S3-compatible endpoint works the same way — Factorydrive has no
+provider-specific code path, RustFS included:
+
+```ts
+FactorydriveModule.forRoot({
+  default: 'assets',
+  drivers: {
+    s3: AwsS3Storage,
+  },
+  disks: {
+    assets: {
+      driver: 's3',
+      config: {
+        bucket: 'my-assets',
+        endpoint: 'http://rustfs:9000',
+        region: 'us-east-1',
+        forcePathStyle: true,
+        credentials: {
+          accessKeyId: process.env.S3_ACCESS_KEY!,
+          secretAccessKey: process.env.S3_SECRET_KEY!,
+        },
+      },
+    },
+  },
+})
+```
+
+### `registerDriver()` — still fully supported
+
+`FactorydriveService.registerDriver('key', DriverClass)` remains available for dynamic
+registration and for existing applications: it does not need to change to keep working.
+
+```ts
 export class AppModule {
   public constructor(factorydrive: FactorydriveService) {
     factorydrive.registerDriver('s3', AwsS3Storage)
   }
 }
 ```
+
+Registering the same key with the **same** class through `drivers` and/or
+`registerDriver()` is a no-op, so a driver can be migrated to `drivers` one at a time
+without breaking a `registerDriver()` call left behind elsewhere. Registering the same
+key with **two different** classes throws `InvalidConfigException` as soon as either
+registration came from `drivers`; two conflicting `registerDriver()` calls (including
+one that replaces the built-in `local` driver) keep the pre-2.1 behavior — the last call
+wins — but now log a warning instead of replacing silently.
 
 ## Exported API
 
@@ -310,14 +398,19 @@ Main exports from this package:
 - `FactorydriveService`
 - `AbstractStorage`
 - `StorageManager`
+- `StorageDriverConstructor` — the driver constructor type used by `drivers`
 - storage config/types from `factorydrive/types`
 - exceptions from `exceptions`
 
 ## Error Handling
 
 The module provides dedicated exceptions (for example):
-- `InvalidConfigException`
-- `DriverNotSupportedException`
+- `InvalidConfigException` — invalid `drivers` entry, or a driver name registered twice
+  with two different classes
+- `DriverNotSupportedException` — a disk's `driver` was never registered; the message
+  names both the driver and the disk, e.g. `Factorydrive driver "s3" required by disk
+  "assets" is not registered. Declare it in "drivers" or call registerDriver() before
+  module initialization.`
 - `FileNotFoundException`
 - `PermissionMissingException`
 - `MethodNotSupportedException`

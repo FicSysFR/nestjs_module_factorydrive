@@ -111,8 +111,11 @@ Do not buffer large files unless the application needs random access or transfor
 
 Factorydrive exports domain exceptions including:
 
-- `InvalidConfigException`
-- `DriverNotSupportedException`
+- `InvalidConfigException` — also raised for driver configuration mistakes: an invalid
+  entry in `drivers`, or a driver name registered twice with two different classes
+  (see [configuration.md](configuration.md#maintain-an-existing-project-registerdriver))
+- `DriverNotSupportedException` — raised when a disk's `driver` was never registered;
+  the message names both the driver and the disk
 - `FileNotFoundException`
 - `PermissionMissingException`
 - `MethodNotSupportedException`

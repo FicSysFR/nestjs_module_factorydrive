@@ -64,8 +64,12 @@ local    S3     SFTP
 ## Implement through the public API
 
 1. Configure disks through `FactorydriveModule.forRoot()` or `forRootAsync()`.
-2. Register each external driver once during application bootstrap, before storage
-   initialization, and make its registration key match `disks.*.driver`.
+2. Declare each external driver in the `drivers` option of that same call
+   (`drivers: { s3: AwsS3Storage }`), so the whole storage configuration lives in one
+   place and no module constructor is needed just to register a driver. Make the
+   registration key match `disks.*.driver`. Use `FactorydriveService.registerDriver()`
+   instead only for dynamic registration or when maintaining an existing application
+   that does not use `drivers` yet.
 3. Inject `FactorydriveService` into an application storage service.
 4. Resolve the disk once per operation or service method and use the common contract.
 5. Destructure documented response fields such as `content`, `exists`, `wasDeleted`,

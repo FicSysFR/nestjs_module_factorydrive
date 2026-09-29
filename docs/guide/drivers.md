@@ -36,14 +36,42 @@ Factorydrive. Il n’expose pas de serveur HTTP.
 Le driver fonctionne avec Amazon S3 et les fournisseurs compatibles. Une URL signée
 S3 est validée par le fournisseur.
 
+Tout endpoint compatible S3 (MinIO, RustFS, DigitalOcean Spaces, Backblaze B2,
+Cloudflare R2, etc.) se configure avec les mêmes champs standard de `S3ClientConfig` —
+définir `endpoint` et `forcePathStyle: true` pour les fournisseurs en style « path » :
+
+```ts
+FactorydriveModule.forRoot({
+  default: 'assets',
+  drivers: { s3: AwsS3Storage },
+  disks: {
+    assets: {
+      driver: 's3',
+      config: {
+        bucket: 'my-assets',
+        endpoint: 'http://rustfs:9000',
+        region: 'us-east-1',
+        forcePathStyle: true,
+        credentials: {
+          accessKeyId: process.env.S3_ACCESS_KEY!,
+          secretAccessKey: process.env.S3_SECRET_KEY!,
+        },
+      },
+    },
+  },
+})
+```
+
 ## SFTP
 
 - Package : `@ficsysfr/nestjs_module_factorydrive-sftp`
 - Classe : `SFTPStorage`
 - Configuration obligatoire : `root` distant et `options` de connexion
 
-Le driver se connecte pendant `onStorageInit()`. Préférer une authentification par clé
-si l’environnement de déploiement le permet.
+Le driver se connecte pendant `onStorageInit()` : sa classe doit donc être enregistrée —
+déclarée dans `drivers` (préférable) ou passée à `registerDriver()` — avant la fin de
+l’initialisation du module. Préférer une authentification par clé si l’environnement de
+déploiement le permet.
 
 ## Choisir
 

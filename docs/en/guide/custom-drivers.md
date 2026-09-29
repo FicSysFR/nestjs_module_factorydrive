@@ -16,8 +16,12 @@ import {
   type Response,
 } from '@ficsysfr/nestjs_module_factorydrive'
 
+export interface ExampleStorageConfig {
+  namespace: string
+}
+
 export class ExampleStorage extends AbstractStorage {
-  public constructor(private readonly config: { namespace: string }) {
+  public constructor(private readonly config: ExampleStorageConfig) {
     super()
   }
 
@@ -33,20 +37,29 @@ export class ExampleStorage extends AbstractStorage {
 
 Keep provider clients, credentials, endpoints, and error translation inside the driver.
 Return portable fields such as `content`, `exists`, `path`, or `wasDeleted`; expose
-provider-specific results only under `raw`.
+provider-specific results only under `raw`. A single-parameter constructor is what makes
+the class assignable to `StorageDriverConstructor<ExampleStorageConfig>`, the type used
+by `drivers`.
 
-## Register the driver
+## Declare the driver
+
+Prefer declaring the driver in `drivers`, in the same `forRoot()` / `forRootAsync()`
+call as the disk configuration:
 
 ```ts
-export class AppModule {
-  public constructor(factorydrive: FactorydriveService) {
-    factorydrive.registerDriver('example', ExampleStorage)
-  }
-}
+FactorydriveModule.forRoot({
+  drivers: { example: ExampleStorage },
+  disks: {
+    example: { driver: 'example', config: { namespace: 'demo' } },
+  },
+})
 ```
 
-The `example` key must match the disk configuration. Registration must happen before
-Factorydrive initializes configured disks.
+Use `FactorydriveService.registerDriver('example', ExampleStorage)` instead for dynamic
+registration, or while maintaining an application that has not adopted `drivers` yet.
+Either way, the `example` key must match the disk configuration, and registration must
+happen before Factorydrive initializes configured disks — `drivers` guarantees that
+ordering automatically.
 
 ## Package a satellite driver
 

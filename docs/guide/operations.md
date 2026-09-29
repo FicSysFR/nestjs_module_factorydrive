@@ -72,3 +72,11 @@ Le package exporte notamment `InvalidConfigException`, `DriverNotSupportedExcept
 `MethodNotSupportedException`, `NoSuchBucketException` et `UnknownException`.
 Les convertir en réponses HTTP ou résultats de job sans divulguer de secret ni
 d’erreur brute du fournisseur.
+
+`DriverNotSupportedException` est levée quand le `driver` d’un disque n’a jamais été
+enregistré ; son message nomme le driver et le disque (voir
+[Validation au démarrage](configuration.md#validation-au-demarrage)).
+`InvalidConfigException` est aussi levée pour une erreur de configuration des drivers :
+une entrée invalide dans `drivers`, ou un nom de driver enregistré deux fois avec deux
+classes différentes (voir
+[Politique de doublons](configuration.md#enregistrer-un-driver-dynamiquement-registerdriver)).

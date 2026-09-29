@@ -86,6 +86,24 @@ try {
     const { exists } = await disk.exists('smoke/buffer.txt')
     assert.equal(exists, false)
   })
+
+  await step('drivers déclaratifs enregistrent le driver avant initDisks()', async () => {
+    class MemoryStorage {
+      constructor(config) {
+        this.config = config
+      }
+    }
+
+    const declarativeManager = new StorageManager({
+      default: 'memory',
+      drivers: { memory: MemoryStorage },
+      disks: { memory: { driver: 'memory', config: { bucket: 'smoke' } } },
+      registerLocalDriver: false,
+    })
+
+    const memoryDisk = declarativeManager.disk('memory')
+    assert.equal(memoryDisk.config.bucket, 'smoke')
+  })
 } finally {
   await rm(root, { recursive: true, force: true })
 }

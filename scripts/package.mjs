@@ -121,7 +121,25 @@ async function pathExists(path) {
   }
 }
 
-async function auditInstalledTarballs(tarballs, projectRoot) {
+/**
+ * Liste les fichiers d'un rapport `npm pack` dont la copie installée diffère de la source
+ * empaquetée (ou manque). Garantit que l'audit porte bien sur le tarball tout juste créé.
+ */
+export async function findInstalledMismatches(pack, sourceRoot, installedRoot) {
+  const mismatches = []
+  for (const file of pack.files) {
+    const segments = file.path.replaceAll('\\', '/').split('/')
+    const packed = await readFile(join(sourceRoot, ...segments))
+    const installed = await readFile(join(installedRoot, ...segments)).catch((error) => {
+      if (error?.code === 'ENOENT') return undefined
+      throw error
+    })
+    if (!installed?.equals(packed)) mismatches.push(file.path)
+  }
+  return mismatches
+}
+
+async function auditInstalledTarballs(packs, projectRoot) {
   const temporaryRoot = await mkdtemp(join(tmpdir(), 'factorydrive-package-audit-'))
   try {
     await writeFile(join(temporaryRoot, 'package.json'), '{"name":"factorydrive-package-audit","private":true}')
@@ -129,10 +147,15 @@ async function auditInstalledTarballs(tarballs, projectRoot) {
       'yarn',
       [
         'add',
+        // Cache isolé : Yarn 1 mémorise un tarball local d'après son chemin absolu
+        // (`<cache>/.tmp/<md5(chemin)>`) et réinstallerait une ancienne copie de même
+        // nom@version, par exemple depuis le cache Yarn restauré en CI.
+        '--cache-folder',
+        join(temporaryRoot, '.yarn-cache'),
         '--ignore-scripts',
         '--non-interactive',
         '--no-progress',
-        ...tarballs,
+        ...packs.map((pack) => pack.tarball),
         '@nestjs/common@11',
         '@nestjs/core@11',
         'reflect-metadata@0.2',
@@ -143,6 +166,14 @@ async function auditInstalledTarballs(tarballs, projectRoot) {
       ],
       temporaryRoot,
     )
+
+    for (const { report, sourceRoot } of packs) {
+      const installedRoot = join(temporaryRoot, 'node_modules', ...report.name.split('/'))
+      const mismatches = await findInstalledMismatches(report, sourceRoot, installedRoot)
+      if (mismatches.length > 0) {
+        throw new Error(`Installed ${report.name} does not match the packed tarball (${mismatches.join(', ')}); a package manager cache served a stale copy`)
+      }
+    }
 
     const corePackage = join(temporaryRoot, 'node_modules', '@ficsysfr', 'nestjs_module_factorydrive', 'package.json')
     const mcpPackage = join(temporaryRoot, 'node_modules', '@ficsysfr', 'nestjs_module_factorydrive-mcp', 'package.json')
@@ -169,7 +200,41 @@ async function auditInstalledTarballs(tarballs, projectRoot) {
     const requireScript = `const module = require('${CORE_NAME}'); if (typeof module.FactorydriveService !== 'function') throw new Error('CommonJS core export missing')`
     run(process.execPath, ['--eval', requireScript], temporaryRoot)
 
-    await writeFile(join(temporaryRoot, 'types-smoke.ts'), `import { FactorydriveService } from '${CORE_NAME}'\nimport '${MCP_NAME}'\nvoid FactorydriveService\n`)
+    const typesSmokeSource = [
+      `import { AbstractStorage, FactorydriveModule, FactorydriveService } from '${CORE_NAME}'`,
+      `import type { StorageDriverConstructor, StorageManagerConfig } from '${CORE_NAME}'`,
+      `import '${MCP_NAME}'`,
+      'void FactorydriveService',
+      '',
+      '// Preuve que StorageDriverConstructor<TConfig> accepte un vrai driver typé sous',
+      "// `strict: true` (`strictFunctionTypes`), c'est-à-dire que `drivers` reste utilisable",
+      '// avec un constructeur dont la config est précisément typée, pas `unknown`.',
+      'interface TypedConfig {',
+      '  bucket: string',
+      '}',
+      '',
+      'class TypedStorage extends AbstractStorage {',
+      '  public constructor(public readonly config: TypedConfig) {',
+      '    super()',
+      '  }',
+      '}',
+      '',
+      'const driverConstructor: StorageDriverConstructor<TypedConfig> = TypedStorage',
+      'void driverConstructor',
+      '',
+      'const syncOptions: StorageManagerConfig = {',
+      "  default: 'typed',",
+      '  drivers: { typed: TypedStorage },',
+      "  disks: { typed: { driver: 'typed', config: { bucket: 'audit' } satisfies TypedConfig } },",
+      '}',
+      'FactorydriveModule.forRoot(syncOptions)',
+      '',
+      'FactorydriveModule.forRootAsync({',
+      '  useFactory: (): StorageManagerConfig => syncOptions,',
+      '})',
+      '',
+    ].join('\n')
+    await writeFile(join(temporaryRoot, 'types-smoke.ts'), typesSmokeSource)
     await writeFile(
       join(temporaryRoot, 'tsconfig.json'),
       `${JSON.stringify({ compilerOptions: { module: 'NodeNext', moduleResolution: 'NodeNext', target: 'ES2022', strict: true, noEmit: true }, files: ['types-smoke.ts'] }, null, 2)}\n`,
@@ -196,14 +261,13 @@ export async function packageAndAudit(projectRoot = resolve(dirname(fileURLToPat
   const mcpManifest = JSON.parse(await readFile(join(projectRoot, 'mcp', 'package.json'), 'utf8'))
   validateManifestPair(coreManifest, mcpManifest)
 
-  const reports = [
-    parsePackOutput(run('npm', ['pack', '.', '--json', '--ignore-scripts', '--pack-destination', artifactsRoot], projectRoot)),
-    parsePackOutput(run('npm', ['pack', '.', '--json', '--ignore-scripts', '--pack-destination', artifactsRoot], join(projectRoot, 'mcp'))),
-  ]
-
-  for (const report of reports) validatePackMetadata(report)
-  const tarballs = reports.map((report) => join(artifactsRoot, report.filename))
-  await auditInstalledTarballs(tarballs, projectRoot)
+  const packs = [projectRoot, join(projectRoot, 'mcp')].map((sourceRoot) => {
+    const report = parsePackOutput(run('npm', ['pack', '.', '--json', '--ignore-scripts', '--pack-destination', artifactsRoot], sourceRoot))
+    validatePackMetadata(report)
+    return { report, sourceRoot, tarball: join(artifactsRoot, report.filename) }
+  })
+  const reports = packs.map((pack) => pack.report)
+  await auditInstalledTarballs(packs, projectRoot)
 
   const audit = {
     version: coreManifest.version,
