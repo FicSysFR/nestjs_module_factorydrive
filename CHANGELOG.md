@@ -29,6 +29,10 @@ All notable changes to Factorydrive are documented here.
 - Tests d’intégration sur une vraie application Nest : `forRoot()`, `forRootAsync()` (`useFactory`, `useClass`), `registerDriver()` historique, migration progressive et conflits (#101).
 - L’audit des tarballs npm installe les paquets avec un cache Yarn isolé et vérifie que chaque fichier installé est identique au fichier empaqueté : Yarn 1 pouvait resservir une ancienne copie de même version, notamment depuis le cache restauré en CI (#101).
 
+### Écosystème
+
+- Driver SFTP `@ficsysfr/nestjs_module_factorydrive-sftp` publié en 2.0.1 : `put()` attend l’upload et propage ses erreurs, `getStream()` s’appuie sur un flux réel proprement libéré, les erreurs SFTP sont mappées sur les exceptions Factorydrive, et le paquet passe sous licence Apache-2.0 (voir son propre CHANGELOG).
+
 ### Migration
 
 - Aucun changement cassant : `registerDriver()` reste pleinement supporté. Pour migrer, remplacer `registerDriver('s3', AwsS3Storage)` par `drivers: { s3: AwsS3Storage }` ; les deux peuvent coexister pendant la transition tant qu’ils enregistrent la même classe.
