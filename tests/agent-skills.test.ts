@@ -27,6 +27,12 @@ function collectFiles(root: string): string[] {
   })
 }
 
+function nonLinkEntries(root: string): string[] {
+  return readdirSync(root, { withFileTypes: true })
+    .filter((entry) => !entry.isSymbolicLink())
+    .map((entry) => resolve(root, entry.name))
+}
+
 function parseFrontmatter(path: string): { name: string; description: string } {
   const content = readFileSync(path, 'utf8')
   const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/)
@@ -66,12 +72,15 @@ describe('Factorydrive Agent Skills pack', () => {
     expect(directoryNames(maintenanceRoot)).toEqual(expectedSkills.maintenance)
 
     const declaration = JSON.parse(readFileSync(resolve(projectRoot, '.agents/skill-sources.json'), 'utf8'))
-    expect(declaration).toEqual({ sources: ['agent-skills/public', 'agent-skills/maintenance'] })
-    for (const source of declaration.sources) expect(statSync(resolve(projectRoot, source)).isDirectory()).toBe(true)
+    expect(declaration).toEqual({
+      schemaVersion: 1,
+      sources: [{ path: 'agent-skills/public' }, { path: 'agent-skills/maintenance' }],
+    })
+    for (const source of declaration.sources) expect(statSync(resolve(projectRoot, source.path)).isDirectory()).toBe(true)
 
     for (const adapterRoot of ['.agents/skills', '.claude/skills']) {
       const path = resolve(projectRoot, adapterRoot)
-      if (existsSync(path)) expect(collectFiles(path)).toEqual([])
+      if (existsSync(path)) expect(nonLinkEntries(path)).toEqual([])
     }
   })
 
