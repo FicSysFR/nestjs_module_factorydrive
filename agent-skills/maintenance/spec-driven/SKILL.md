@@ -58,7 +58,7 @@ Checklist ordonnée, une case = une unité vérifiable. Inclure tests + build.
 - Cocher les tasks au fil de l'eau
 - Respecter `CLAUDE.md` (imports Nest, barrel `src/index.ts`)
 - Vérifier avec `yarn lint`, `yarn test` et `yarn build`
-- Ne pas committer sans demande explicite
+- Committer une fois les vérifications au vert ; push sur demande explicite (voir `CLAUDE.md` §0)
 
 ## Références
 

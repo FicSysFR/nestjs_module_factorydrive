@@ -25,7 +25,7 @@ Versions `MAJOR.MINOR.PATCH` uniquement ([SemVer 2.0.0](https://semver.org/)). B
 
 ## Comportement agent
 
-- Proposer le message ; ne pas committer/pousser sans demande explicite.
+- Committer une fois lint, tests et build au vert ; pousser uniquement sur demande explicite (voir `CLAUDE.md` §0).
 - Un commit = une intention ; pas de `WIP` ni sujets vagues (`update`, `fix stuff`).
 - Corps optionnel pour le *pourquoi* ; pied `Refs: #N` / `Closes: #N` si issue liée.
 
