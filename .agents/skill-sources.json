@@ -1,3 +1,4 @@
 {
-  "sources": ["agent-skills/public", "agent-skills/maintenance"]
+  "schemaVersion": 1,
+  "sources": [{ "path": "agent-skills/public" }, { "path": "agent-skills/maintenance" }]
 }

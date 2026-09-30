@@ -121,7 +121,7 @@ chore(root): add conventional commit rules for AI assistants
 
 ## Règles pour les agents IA
 
-1. **Proposer** un message conforme ; ne pas exécuter `git commit` ni `git push` sauf demande explicite de l'utilisateur (voir `CLAUDE.md` §0).
+1. **Committer** avec un message conforme une fois lint, tests et build au vert ; ne pas exécuter `git push`, `git tag` ni ouvrir de pull request sauf demande explicite de l'utilisateur (voir `CLAUDE.md` §0).
 2. **Un commit = une intention** : ne pas mélanger feat + refactor sans lien ; scinder en commits atomiques si nécessaire.
 3. **Éviter** : `WIP`, `fix stuff`, `update`, sujets vagues sans type/scope.
 4. **Revert** : `revert(<scope>): <sujet du commit annulé>` + corps avec hash court (`Refs: abc1234`).

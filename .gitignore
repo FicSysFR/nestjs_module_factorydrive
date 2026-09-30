@@ -16,11 +16,16 @@
 !.agents/
 .agents/*
 !.agents/skill-sources.json
-.claude/skills/
+!.agents/language.json
+!.claude/
+.claude/*
+!.claude/settings.json
 !agent-skills/
 !agent-skills/**
 !.cursor/
 !.cursor/**
+!.vscode/
+!.vscode/**
 !.issues/
 !.issues/.gitignore
 !specs/

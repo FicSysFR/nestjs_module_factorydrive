@@ -16,12 +16,15 @@ Les instructions courtes multi-agents : [`AGENTS.md`](AGENTS.md).
 
 ## 0. Règle absolue — Git
 
-🚫 **Claude ne doit JAMAIS `git commit` ni `git push` de lui-même.**
-
-- Préparer les modifications (édition de fichiers), proposer un message de commit si utile,
-  puis **laisser l'utilisateur committer et pousser lui-même**.
-- Cette règle s'applique même si l'utilisateur a précédemment approuvé un commit : chaque
-  commit/push reste une action manuelle de l'utilisateur.
+- **Commit** : autorisé sans confirmation une fois les vérifications de la section 2
+  au vert. Stager uniquement les fichiers de la tâche (jamais `git add -A`) et préserver
+  les changements sans rapport.
+- **Push, tag, pull request, release, publication npm** : uniquement sur demande
+  explicite de l'utilisateur, en montrant d'abord la commande exacte. Chaque
+  autorisation ne vaut que pour l'action demandée, jamais en lot ni par anticipation.
+- **Historique** : ne jamais réécrire l'historique partagé (`push --force`, rebase
+  publié) sans demande explicite.
+- **Attribution** : aucun commit, pull request, issue ou commentaire ne crédite une IA.
 - **Format des messages** : Conventional Commits 1.0.0 — voir
   `docs/conventions/conventional-commits.md` (types, scopes, exemples).
   Sujet en anglais : `type(scope): description impérative`, ≤ 72 caractères, sans point final.
