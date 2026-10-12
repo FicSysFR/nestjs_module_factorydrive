@@ -51,7 +51,7 @@
     "zod": "^4.5.4"
   },
   "devDependencies": {
-    "@types/node": "^22.10.0",
+    "@types/node": "^26.4.1",
     "typescript": "^5.9.3"
   },
   "publishConfig": {
